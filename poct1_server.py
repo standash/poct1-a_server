@@ -6,9 +6,7 @@ import parsers
 import generators
 import traceback
 
-poc_host, poc_port = "192.168.2.100", 3001
 poc_sequence_number = 4000
-
 
 def answer_hello(conn, message):
     global poc_sequence_number
@@ -92,8 +90,20 @@ def start_continuous_directive(conn, fields):
     #
     conn.send(request_bytes)
 
+def print_help_message():
+    print("\nThis is a simple POCT1-A server that implements \nbasic profile conversation flow for Siemens DCA Vantage.")
+    print("The server waits for a connection from DCA, requests patient \ntests and establishes continuos conversation mode.\n")
+    print("To run the server, type:\n")
+    print("\t./poct1_server.py [server-ip-address] [server-port]\n")
+
 
 if __name__ == "__main__":
+    if len(sys.argv) < 3 or sys.argv[1] == "" or sys.argv[2] == "":
+        print_help_message()
+        sys.exit(0)
+
+    poc_host, poc_port = sys.argv[1], int(sys.argv[2])
+
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
