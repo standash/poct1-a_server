@@ -8,13 +8,10 @@ def generate_ack_message(msg, seq_num):
     bytez += "<ACK.R01>".encode("utf-8")
     bytez += "<HDR>".encode("utf-8")
     bytez += "<HDR.message_type V=\"ACK.R01\" />".encode("utf-8")
-    #
-    new_control_id = str(int(msg["control_id"]) + 1)
     bytez += "<HDR.control_id V=\"{}\"/>".format(seq_num).encode("utf-8")
-    #
     bytez += "<HDR.version_id V=\"POCT1\" />".encode("utf-8")
     #
-    timestamp = increment_timestamp(msg["creation_dttm"], 2)
+    timestamp = increment_timestamp(msg["creation_dttm"], 1)
     bytez += "<HDR.creation_dttm V=\"{}\" />".format(timestamp).encode("utf-8")
     #
     bytez += "</HDR>".encode("utf-8")
@@ -23,6 +20,46 @@ def generate_ack_message(msg, seq_num):
     bytez += "<ACK.ack_control_id V=\"{}\" />".format(msg["control_id"]).encode("utf-8")
     bytez += "</ACK>".encode("utf-8")
     bytez += "</ACK.R01>".encode("utf-8")
+    return bytez
+
+
+def generate_request4observations_message(msg, seq_num):
+    bytez = b""
+    bytez += "<?xml version=\"1.0\" encoding=\"utf-8\"?>".encode("utf-8")
+    bytez += "<REQ.R01>".encode("utf-8")
+    bytez += "<HDR>".encode("utf-8")
+    bytez += "<HDR.message_type V=\"REQ.R01\" />".encode("utf-8")
+    bytez += "<HDR.control_id V=\"{}\"/>".format(seq_num).encode("utf-8")
+    bytez += "<HDR.version_id V=\"POCT1\" />".encode("utf-8")
+    #
+    timestamp = increment_timestamp(msg["creation_dttm"], 1)
+    bytez += "<HDR.creation_dttm V=\"{}\" />".format(timestamp).encode("utf-8")
+    #
+    bytez += "</HDR>".encode("utf-8")
+    bytez += "<REQ>".encode("utf-8")
+    bytez += "<REQ.request_cd V=\"ROBS\" />".encode("utf-8")
+    bytez += "</REQ>".encode("utf-8")
+    bytez += "</REQ.R01>".encode("utf-8")
+    return bytez
+
+
+def generate_cont_directive_message(msg, seq_num):
+    bytez = b""
+    bytez += "<?xml version=\"1.0\" encoding=\"utf-8\"?>".encode("utf-8")
+    bytez += "<DTV.R01>".encode("utf-8")
+    bytez += "<HDR>".encode("utf-8")
+    bytez += "<HDR.message_type V=\"REQ.R01\" />".encode("utf-8")
+    bytez += "<HDR.control_id V=\"{}\"/>".format(seq_num).encode("utf-8")
+    bytez += "<HDR.version_id V=\"POCT1\" />".encode("utf-8")
+    #
+    timestamp = increment_timestamp(msg["creation_dttm"], 1)
+    bytez += "<HDR.creation_dttm V=\"{}\" />".format(timestamp).encode("utf-8")
+    #
+    bytez += "</HDR>".encode("utf-8")
+    bytez += "<DTV>".encode("utf-8")
+    bytez += "<DTV.command_cd V=\"START_CONTINUOUS\"  />".encode("utf-8")
+    bytez += "</DTV>".encode("utf-8")
+    bytez += "</DTV.R01>".encode("utf-8")
     return bytez
 
 

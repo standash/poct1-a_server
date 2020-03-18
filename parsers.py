@@ -8,24 +8,16 @@ def prettyprint(bytez):
     print(dom.toprettyxml())
 
 
-def parse_xml(xml_element, template):
+def parse_xml(fields, xml_element):
     if xml_element == None:
         return
-    for key in template:
-        if template[key] == "" and key in xml_element.tag:
-            template[key] = xml_element.attrib["V"]
+    for key in fields:
+        if fields[key] == "" and key in xml_element.tag:
+            fields[key] = xml_element.attrib["V"]
     for xml_child in list(xml_element):
-        parse_xml(xml_child, template)
+        parse_xml(fields, xml_child)
 
 
-def parse_hello_message(message):
-    msg = {
-            "message_type" : "",
-            "device_id" : "",
-            "control_id" : "",
-            "creation_dttm" : "",
-            "version_id" : "",
-    }
+def parse_incoming_message(fields, message):
     xml_root = ET.fromstring(message)
-    parse_xml(xml_root, msg)
-    return msg
+    parse_xml(fields, xml_root)
