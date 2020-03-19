@@ -30,10 +30,14 @@ if __name__ == "__main__":
         with conn:
             print("Connected by {}".format(addr))
 
-            # perform the basic confersation flow
-            conversations.basic_conversation_flow(conn)
+            # perform the basic confersation flow and establish communication with the device
+            latest_timestamp = conversations.basic_conversation_flow(conn)
             
-            # from this point we can send messages to the device
+            # # from this point on we can send messages to the device
+            if latest_timestamp:
+                conversations.update_operators_list_flow(latest_timestamp, "Bruce Wayne", "gotham", conn)
+            else:
+                raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
 
 
     except Exception as e:

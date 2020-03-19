@@ -85,6 +85,7 @@ def generate_operator_list_update_message(latest_timestamp, own_seq_num, operato
     base64_password = base64.b64encode(operator_password.encode("utf-8")).decode("utf-8")
     bytez += "<ACC.password ENC=\"B64\">{}</ACC.password>".format(base64_password).encode("utf-8")
     #
+    bytez += "<ACC.permission_level_cd V=\"1\" />".encode("utf-8")
     bytez += "</ACC>".encode("utf-8")
     bytez += "</OPR>".encode("utf-8")
     bytez += "</OPL.R01>".encode("utf-8")
