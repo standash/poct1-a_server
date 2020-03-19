@@ -28,22 +28,31 @@ if __name__ == "__main__":
         sock.listen()
         conn, addr = sock.accept()
         with conn:
-            print("Connected by {}".format(addr))
 
-            # perform the basic confersation flow and establish communication with the device
-            latest_timestamp = conversations.basic_conversation_flow(conn)
-            
-            # update operator list
-            if latest_timestamp:
-                latest_timestamp = conversations.update_operators_list_flow(latest_timestamp, "Bruce Wayne", "gotham", conn)
-            else:
-                raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+                print("Connected by {}".format(addr))
 
-            # send a remote command
-            if latest_timestamp:
-                latest_timestamp = conversations.send_remote_command_flow(latest_timestamp, "FORCE_HIGH", conn)
-            else:
-                raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+                # perform the basic confersation flow and establish communication with the device
+                latest_timestamp = conversations.basic_conversation_flow(conn)
+                conversations.terminate_conversation_flow(latest_timestamp, conn)
+                
+                # # update operator list
+                # if latest_timestamp:
+                    # latest_timestamp = conversations.update_operators_list_flow(latest_timestamp, "Bruce Wayne", "gotham", conn)
+                # else:
+                    # raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+
+                # # send a remote command
+                # if latest_timestamp:
+                    # latest_timestamp = conversations.send_remote_command_flow(latest_timestamp, "FORCE_HIGH", conn)
+                # else:
+                    # raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+
+                # end the conversation
+                # if latest_timestamp:
+                    # conversations.terminate_conversation(latest_timestamp, conn)
+                # else:
+                    # raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+
             
 
     except Exception as e:

@@ -133,6 +133,25 @@ def generate_remote_command_message(latest_timestamp, own_seq_num, command):
     return bytez
 
 
+def generate_terminate_message(latest_timestamp, own_seq_num):
+    bytez = b""
+    bytez += "<?xml version=\"1.0\" encoding=\"utf-8\"?>".encode("utf-8")
+    bytez += "<END.R01>".encode("utf-8")
+    bytez += "<HDR>".encode("utf-8")
+    bytez += "<HDR.control_id V=\"{}\"/>".format(own_seq_num).encode("utf-8")
+    bytez += "<HDR.version_id V=\"POCT1\" />".encode("utf-8")
+    #
+    timestamp = increment_timestamp(latest_timestamp, 1)
+    bytez += "<HDR.creation_dttm V=\"{}\" />".format(timestamp).encode("utf-8")
+    #
+    bytez += "</HDR>".encode("utf-8")
+    bytez += "<TRM>".encode("utf-8")
+    bytez += "<TRM.reason_cd V=\"UNK\" />".encode("utf-8")
+    bytez += "</TRM>".encode("utf-8")
+    bytez += "</END.R01>".encode("utf-8")
+    return bytez
+
+
 
 def increment_timestamp(timestamp, n_seconds):
     chunks = timestamp.split("-")
