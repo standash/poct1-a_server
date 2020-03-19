@@ -5,7 +5,7 @@ import socket
 import traceback
 import conversations
 
-poc_sequence_number = 4000
+own_sequence_number = 4000
 
 def print_help_message():
     print("\nThis is a simple POCT1-A server that implements \nbasic profile conversation flow for Siemens DCA Vantage.")
@@ -33,7 +33,6 @@ if __name__ == "__main__":
             # perform the basic confersation flow
             conversations.basic_conversation_flow(conn)
             
-
             # from this point we can send messages to the device
 
 

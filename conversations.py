@@ -1,16 +1,41 @@
 import parsers 
 import generators
-from poct1_server import poc_sequence_number
+from poct1_server import own_sequence_number
 
-def answer_hello(conn, message):
-    global poc_sequence_number
-    poc_sequence_number += 1
+# TODO: OPS.R01
+#       -> The data manager can create a new operator list for the DCA Vantage Analyzer by sending a Complete Update message (OPL.R01).
+#       -> operator list download?
+
+# TODO: EVS.R01
+#       -> device events
+#       -> operator list update?
+
+# TODO: OBS.R02
+#       -> non-patient observations
+
+# TODO: DTV.SIEM.DVCMD
+#       -> remote commend directive
+
+# TODO: KPA.R01
+#       -> keep alive message
+
+# TODO: KPA.R01
+#       -> keep alive message
+
+# TODO: END.R01
+#       -> terminate message
+
+def ack_message(conn, message):
+    global own_sequence_number
+    own_sequence_number += 1
     fields = {
             "control_id" : "",
             "creation_dttm" : "",
     }
     parsers.parse_incoming_message(fields, message)
-    ack_bytes = generators.generate_ack_message(fields, poc_sequence_number)
+    device_sequence_number = fields["control_id"]
+    latest_timestamp = fields["creation_dttm"]
+    ack_bytes = generators.generate_ack_message(latest_timestamp, own_sequence_number, device_sequence_number)
     #
     print("----------------------------")
     print("[ACK.R01] => DCA")
@@ -21,48 +46,10 @@ def answer_hello(conn, message):
     return fields
 
 
-def answer_device_status(conn, message):
-    global poc_sequence_number
-    poc_sequence_number += 1
-    fields = {
-            "control_id" : "",
-            "creation_dttm" : "",
-    }
-    parsers.parse_incoming_message(fields, message)
-    ack_bytes = generators.generate_ack_message(fields, poc_sequence_number)
-    #
-    print("----------------------------")
-    print("[ACK.R01] => DCA")
-    print("----------------------------")
-    parsers.prettyprint(ack_bytes)
-    #
-    conn.send(ack_bytes)
-    return fields
-
-
-def answer_observations(conn, message):
-    global poc_sequence_number
-    poc_sequence_number += 1
-    fields = {
-            "control_id" : "",
-            "creation_dttm" : "",
-    }
-    parsers.parse_incoming_message(fields, message)
-    ack_bytes = generators.generate_ack_message(fields, poc_sequence_number)
-    #
-    print("----------------------------")
-    print("[ACK.R01] => DCA")
-    print("----------------------------")
-    parsers.prettyprint(ack_bytes)
-    #
-    conn.send(ack_bytes)
-    return fields
-
-
-def request_observations(conn, fields):
-    global poc_sequence_number
-    poc_sequence_number += 1
-    request_bytes = generators.generate_request4observations_message(fields, poc_sequence_number)
+def request_observations(latest_timestamp, conn):
+    global own_sequence_number
+    own_sequence_number += 1
+    request_bytes = generators.generate_request4observations_message(latest_timestamp, own_sequence_number)
     #
     print("----------------------------")
     print("[REQ.R01] => DCA")
@@ -72,10 +59,10 @@ def request_observations(conn, fields):
     conn.send(request_bytes)
 
 
-def start_continuous_directive(conn, fields):
-    global poc_sequence_number
-    poc_sequence_number += 1
-    request_bytes = generators.generate_cont_directive_message(fields, poc_sequence_number)
+def start_continuous_directive(latest_timestamp, conn):
+    global own_sequence_number
+    own_sequence_number += 1
+    request_bytes = generators.generate_cont_directive_message(latest_timestamp, own_sequence_number)
     #
     print("----------------------------")
     print("[DTV.R01] => DCA")
@@ -85,11 +72,15 @@ def start_continuous_directive(conn, fields):
     conn.send(request_bytes)
 
 
+def update_operators_list_flow(conn):
+    pass
+
+
 def basic_conversation_flow(conn):
     while True:
         data = conn.recv(1024)
         if not data:
-            break
+            raise Exception("NO DATA FROM DEVICE!")
 
         data_str = data.strip().decode("utf-8")
         if "HEL.R01" in data_str:
@@ -99,7 +90,7 @@ def basic_conversation_flow(conn):
             print("----------------------------")
             parsers.prettyprint(data)
             #
-            answer_hello(conn, data_str)
+            ack_message(conn, data_str)
 
         elif "DST.R01" in data_str:
             #
@@ -108,8 +99,8 @@ def basic_conversation_flow(conn):
             print("----------------------------")
             parsers.prettyprint(data)
             #
-            _fields = answer_device_status(conn, data_str)
-            request_observations(conn, _fields)
+            fields = ack_message(conn, data_str)
+            request_observations(fields["creation_dttm"], conn)
 
         elif "OBS.R01" in data_str:
             #
@@ -118,7 +109,7 @@ def basic_conversation_flow(conn):
             print("----------------------------")
             parsers.prettyprint(data)
             #
-            answer_observations(conn, data_str) 
+            ack_message(conn, data_str) 
 
         elif "EOT.R01" in data_str:
             #
@@ -128,11 +119,10 @@ def basic_conversation_flow(conn):
             parsers.prettyprint(data)
             #
             fields = {
-                    "control_id" : "",
                     "creation_dttm" : "",
             }
             parsers.parse_incoming_message(fields, data_str)
-            start_continuous_directive(conn, fields)
+            start_continuous_directive(fields["creation_dttm"], conn)
 
         elif "ACK.R01" in data_str:
             #
