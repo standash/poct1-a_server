@@ -33,12 +33,18 @@ if __name__ == "__main__":
             # perform the basic confersation flow and establish communication with the device
             latest_timestamp = conversations.basic_conversation_flow(conn)
             
-            # # from this point on we can send messages to the device
+            # update operator list
             if latest_timestamp:
-                conversations.update_operators_list_flow(latest_timestamp, "Bruce Wayne", "gotham", conn)
+                latest_timestamp = conversations.update_operators_list_flow(latest_timestamp, "Bruce Wayne", "gotham", conn)
             else:
                 raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
 
+            # send a remote command
+            if latest_timestamp:
+                latest_timestamp = conversations.send_remote_command_flow(latest_timestamp, "FORCE_HIGH", conn)
+            else:
+                raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
+            
 
     except Exception as e:
         print("ERROR: {}".format(e))

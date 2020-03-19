@@ -113,6 +113,27 @@ def generate_end_of_topic_message(latest_timestamp, own_seq_num, device_seq_num)
     return bytez
 
 
+def generate_remote_command_message(latest_timestamp, own_seq_num, command):
+    bytez = b""
+    bytez += "<?xml version=\"1.0\" encoding=\"utf-8\"?>".encode("utf-8")
+    bytez += "<DTV.SIEM.DVCMD>".encode("utf-8")
+    bytez += "<HDR>".encode("utf-8")
+    bytez += "<HDR.message_type V=\"DTV.SIEM.DVCMD\" SN=\"SIEM\" SV=\"1.0\" />".encode("utf-8")
+    bytez += "<HDR.control_id V=\"{}\"/>".format(own_seq_num).encode("utf-8")
+    bytez += "<HDR.version_id V=\"POCT1\" />".encode("utf-8")
+    #
+    timestamp = increment_timestamp(latest_timestamp, 1)
+    bytez += "<HDR.creation_dttm V=\"{}\" />".format(timestamp).encode("utf-8")
+    #
+    bytez += "</HDR>".encode("utf-8")
+    bytez += "<DTV>".encode("utf-8")
+    bytez += "<DTV.command_cd V=\"{}\" SN=\"SIEM\" SV=\"1.0\" />".format(command).encode("utf-8")
+    bytez += "</DTV>".encode("utf-8")
+    bytez += "</DTV.SIEM.DVCMD>".encode("utf-8")
+    return bytez
+
+
+
 def increment_timestamp(timestamp, n_seconds):
     chunks = timestamp.split("-")
     xxx = chunks[2].split("T")

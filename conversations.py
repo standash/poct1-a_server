@@ -2,24 +2,6 @@ import parsers
 import generators
 from poct1_server import own_sequence_number
 
-# TODO: EVS.R01
-#       -> device events
-#       -> operator list update?
-
-# TODO: OBS.R02
-#       -> non-patient observations
-
-# TODO: DTV.SIEM.DVCMD
-#       -> remote commend directive
-
-# TODO: KPA.R01
-#       -> keep alive message
-
-# TODO: KPA.R01
-#       -> keep alive message
-
-# TODO: END.R01
-#       -> terminate message
 
 def ack_message(conn, message):
     global own_sequence_number
@@ -63,7 +45,6 @@ def end_of_topic_message(conn, message):
     return fields
 
 
-
 def request_observations(latest_timestamp, conn):
     global own_sequence_number
     own_sequence_number += 1
@@ -103,9 +84,68 @@ def update_operator_list(latest_timestamp, operator_name, operator_password, con
     conn.send(request_bytes)
 
 
+def send_remote_command(latest_timestamp, command, conn):
+    global own_sequence_number
+    own_sequence_number += 1
+    cmd_bytes = generators.generate_remote_command_message(latest_timestamp, own_sequence_number, command)
+    #
+    print("----------------------------")
+    print("[DTV.SIEM.DVCMD] ({}) => DCA".format(command))
+    print("----------------------------")
+    parsers.prettyprint(cmd_bytes)
+    #
+    conn.send(cmd_bytes)
+
+
+def send_remote_command_flow(latest_timestamp, command, conn):
+    send_remote_command(latest_timestamp, command, conn)
+    latest_timestamp = None
+    while True:
+        data = conn.recv(1024)
+        if not data:
+            raise Exception("NO DATA FROM DEVICE!")
+
+        data_str = data.strip().decode("utf-8")
+        data_str = data.strip().decode("utf-8")
+        if "ACK.R01" in data_str:
+            #
+            print("----------------------------")
+            print("DCA => [ACK.R01]")
+            print("----------------------------")
+            parsers.prettyprint(data)
+            #
+            print("----------------------------")
+            print("REMOTE COMMAND HAS BEEN EXECUTED")
+            print("----------------------------")
+            parsers.parse_incoming_message(fields, data_str)
+            latest_timestamp = fields["creation_dttm"]
+            break
+        elif "ESC.R01" in data_str and "CNC" in data_str:
+            #
+            print("----------------------------")
+            print("DCA => [ESC.R01]")
+            print("----------------------------")
+            parsers.prettyprint(data)
+            #
+            print("----------------------------")
+            print("SYSTEM IS BUSY, REMOTE COMMAND FAILED")
+            print("----------------------------")
+            break
+        #----------------------------------------------------
+        else:
+            #
+            print("----------------------------")
+            print("DCA => [???]")
+            print("----------------------------")
+            parsers.prettyprint(data)
+    
+    return latest_timestamp
+
+
 def update_operators_list_flow(latest_timestamp, name, password, conn):
-    operator_updated = False
     update_operator_list(latest_timestamp, name, password, conn)
+    operator_updated = False
+    latest_timestamp = None
     while True:
         data = conn.recv(1024)
         if not data:
@@ -123,6 +163,8 @@ def update_operators_list_flow(latest_timestamp, name, password, conn):
                 print("----------------------------")
                 print("OPERATOR LIST HAS BEEN UPDATED")
                 print("----------------------------")
+                parsers.parse_incoming_message(fields, data_str)
+                latest_timestamp = fields["creation_dttm"]
                 break
             else:
                 end_of_topic_message(conn, data_str)
@@ -154,6 +196,7 @@ def update_operators_list_flow(latest_timestamp, name, password, conn):
             print("DCA => [???]")
             print("----------------------------")
             parsers.prettyprint(data)
+    return latest_timestamp
 
 
 
