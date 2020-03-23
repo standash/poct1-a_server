@@ -5,8 +5,6 @@ import socket
 import traceback
 import conversations
 
-own_sequence_number = 4000
-
 def print_help_message():
     print("\nThis is a simple POCT1-A server that implements \nbasic profile conversation flow for Siemens DCA Vantage.")
     print("The server waits for a connection from DCA, requests patient \ntests and establishes continuos conversation mode.\n")
@@ -41,7 +39,7 @@ if __name__ == "__main__":
 
             # send a remote command
             if latest_timestamp:
-                latest_timestamp = conversations.send_remote_command_flow(latest_timestamp, "FORCE_HIGH", conn)
+                latest_timestamp = conversations.remote_command_flow(latest_timestamp, "FORCE_HIGH", conn)
             else:
                 raise Exception("ERROR: previous conversation flow did not return the latest timestamp!")
 
